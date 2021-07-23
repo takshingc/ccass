@@ -4,14 +4,19 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "ccass": "node main.js"
+    "server": "node app.js",
+    "fetcher": "node main.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "chart.js": "^3.4.1",
     "cheerio": "^1.0.0-rc.10",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
+    "express": "^4.17.1",
     "playwright": "^1.12.3"
   }
 }

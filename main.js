@@ -4,7 +4,7 @@ const playwright = require('playwright');
 const cheerio = require('cheerio');
 const createCsvWriter = require('csv-writer').createArrayCsvWriter;
 
-async function main(stock_num, date) {
+async function main(stock_num, date, headless=true) {
     // Open a Chromium browser. We use headless: false
     // to be able to watch what's going on.
     const browser = await playwright.chromium.launch({
@@ -22,6 +22,8 @@ async function main(stock_num, date) {
 
     await page.waitForSelector('table.table');
     const html = await page.content();
+    await browser.close();
+
     const $ = cheerio.load(html);
 
     let list = [];
@@ -29,7 +31,6 @@ async function main(stock_num, date) {
 
     let data = list.reduce(toPartitions(5), [])
     writeCSV(`./data/${stock_num}_${date}.csv`, data)
-    await browser.close();
 }
 
 function toPartitions(size) {
@@ -58,4 +59,8 @@ function writeCSV(file_path, data) {
 var myArgs = process.argv.slice(2);
 const stock_num = myArgs[0] || '6060';
 const date = myArgs[1] || new Date().toISOString().slice(0, 10);
-main(stock_num, date);
+const headless = myArgs[2] || true
+
+main(stock_num, date, headless);
+
+exports.fetcher = main;

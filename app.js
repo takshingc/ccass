@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const csv = require('csv-parser');
-const fetcher = require('./main').fetcher;
+const client = require('./db_client').client;
 
 const app = express();
 
@@ -10,36 +10,23 @@ app.use(cors())
 
 const port = 3000;
 
-app.get('/', (req, res) => {
-
-    const agents = [];
-
+app.get('/', async (req, res) => {
     let stock_code = req.query.stock_code || '6060';
     let date = req.query.date || new Date().toISOString().substring(0, 10);
 
-    const file_path = `./data/${stock_code}_${date}.csv`;
+    const holdings = await client.agentStockHolding.findMany({
+        where: {
+            stock_code: stock_code,
+            on_date: new Date(date)
+        }
+    });
 
-    const done = () => {
-        fs.createReadStream(file_path)
-            .pipe(csv())
-            .on('data', (data) => {
-                agents.push(data);
-            })
-            .on('end', function () {
-                res.json(agents);
-            });
-    }
+    const ret = JSON.stringify(
+        holdings,
+        (key, value) => (typeof value === 'bigint' ? value.toString() : value) // return everything else unchanged
+    )
 
-    if (fs.existsSync(file_path)) {
-        done()
-    } else {
-        console.log(`download ${stock_code} on ${date} began`);
-
-        fetcher(stock_code, date).then(() => {
-            console.log(`download ${stock_code} on ${date} finished`);
-            done();
-        });
-    };
+    res.send(ret);
 });
 
 app.listen(port, () => {

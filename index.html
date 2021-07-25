@@ -35,8 +35,8 @@
         $('#search').click(() => {
             const date = $('#date').val();
             const stock_code = $('#stock_code').val();
-            $.get("http://localhost:3000/", { stock_code: stock_code, date: date }, function (data) {
-                renderGraph(data);
+            $.get("http://localhost:3000/", { stock_code: stock_code, date: date }, function (holdings) {
+                renderGraph(JSON.parse(holdings));
             });
 
             function randomColor() {
@@ -46,17 +46,17 @@
                 return "rgb(" + r + "," + g + "," + b + ")";
             }
 
-            function renderGraph(agents) {
+            function renderGraph(holdings) {
                 var ctx = document.getElementById('myChart').getContext("2d");
 
                 const data = {
-                    labels: agents.map(agent => agent['id']),
+                    labels: holdings.map(holding => holding['agent_id']),
                     datasets: [{
                         label: stock_code,
-                        data: agents.map(agent => parseInt(agent['shares'].replace(/,/g, ''))),
-                        backgroundColor: agents.map(() => randomColor()),
+                        data: holdings.map(holding => parseInt(holding['shares'].replace(/,/g, ''))),
+                        backgroundColor: holdings.map(() => randomColor()),
                     }],
-                    agents: agents
+                    holdings: holdings
                 };
 
                 const config = {
@@ -66,7 +66,7 @@
                         tooltips: {
                             callbacks: {
                                 label: (tooltip, data) => {
-                                    return data.agents[tooltip.index]['name'];
+                                    return data.holdings[tooltip.index]['agent_id']; // TODO: use agent name
                                 }
                             }
                         }

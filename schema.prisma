@@ -9,18 +9,30 @@ datasource db {
 
 model Stock {
   id Int @id @default(autoincrement())
-  code String
+  code String @unique
   name String
   sector String?
-
-  @@index([code])
+  agent_holdings AgentStockHolding[]
 }
 
 model Agent {
   id Int @id @default(autoincrement())
-  aid String
+  aid String @unique
   name String
   type String?
+  stock_holdings AgentStockHolding[]
+}
 
-  @@index([aid])
+model AgentStockHolding {
+  id Int @id @default(autoincrement())
+  stock Stock @relation(fields: [stock_code], references: [code])
+  stock_code String
+  agent Agent @relation(fields: [agent_id], references: [aid])
+  agent_id String
+  shares BigInt
+  percentage Float
+  on_date DateTime
+
+  @@index([stock_code])
+  @@index([agent_id])
 }

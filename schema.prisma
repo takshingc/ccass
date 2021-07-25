@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Stock {
+  id Int @id @default(autoincrement())
+  code String
+  name String
+  sector String?
+
+  @@index([code])
+}
+
+model Agent {
+  id Int @id @default(autoincrement())
+  aid String
+  name String
+  type String?
+
+  @@index([aid])
+}

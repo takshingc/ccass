@@ -35,7 +35,7 @@
         $('#search').click(() => {
             const date = $('#date').val();
             const stock_code = $('#stock_code').val();
-            $.get("http://localhost:3000/", { stock_code: stock_code, date: date }, function (holdings) {
+            $.get("http://localhost:3000/holding", { stock_code: stock_code, date: date }, function (holdings) {
                 renderGraph(JSON.parse(holdings));
             });
 

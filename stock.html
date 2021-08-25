@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CCASS</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.min.js"></script>
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body class="container mx-auto mt-5">
+    <div class="block">
+      <form class="max-w-lg">
+        <div class="flex flex-wrap -mx-3 mb-6">
+          <label for="stock_code">Stock Code:</label>
+          <input id="stock_code" />
+
+          <label for="agent_code">Agent Code:</label>
+          <input id="agent_code" list="agents" />
+          <datalist id="agents"></datalist>
+        </div>
+        <div class="flex flex-wrap -mx-3 mb-6">
+          <label for="from_date">From Date:</label>
+          <input type="date" id="from_date" />
+
+          <label for="to_date">To Date:</label>
+          <input type="date" id="to_date" />
+        </div>
+      </form>
+      <div>
+        <button
+          class="
+            bg-transparent
+            hover:bg-blue-500
+            text-blue-700
+            font-semibold
+            hover:text-white
+            py-2
+            px-4
+            border border-blue-500
+            hover:border-transparent
+            rounded
+          "
+          id="search"
+        >
+          Search
+        </button>
+      </div>
+    </div>
+
+    <div id="chartContainer" class="h-screen">
+      <canvas id="myChart"></canvas>
+    </div>
+
+    <script>
+      $(document).ready(() => {
+        $("#from_date").val("2021-07-01");
+        $("#to_date").val(new Date().toISOString().substring(0, 10));
+        $("#stock_code").val("6060");
+      });
+
+      $("#search").click(() => {
+        const from_date = $("#from_date").val();
+        const to_date = $("#to_date").val();
+        const agent_code = $("#agent_code").val();
+        const code = $("#stock_code").val();
+
+        $.get(
+          "http://localhost:3000/stock",
+          {
+            code: code,
+            from_date: from_date,
+            to_date: to_date,
+            agent_code: agent_code,
+          },
+          function (data) {
+            renderGraph(JSON.parse(data));
+          }
+        );
+
+        function randomColor() {
+          var r = Math.floor(Math.random() * 255);
+          var g = Math.floor(Math.random() * 255);
+          var b = Math.floor(Math.random() * 255);
+          return "rgb(" + r + "," + g + "," + b + ")";
+        }
+
+        function renderGraph(response_data) {
+          $("#myChart").remove();
+          $("#chartContainer").append('<canvas id="myChart"><canvas>');
+
+          var ctx = document.getElementById("myChart").getContext("2d");
+
+          const { agents, agent_holdings } = response_data;
+
+          const data = {
+            datasets: Object.entries(agent_holdings).map(([aid, holdings]) => {
+              return {
+                label: `${aid} ${agents[aid]}`,
+                data: holdings.map((holding) => {
+                  return {
+                    t: new moment(holding.on_date),
+                    y: parseInt(holding.shares),
+                  };
+                }),
+                borderColor: randomColor(),
+              };
+            }),
+          };
+
+          const config = {
+            type: "line",
+            data: data,
+            options: {
+              scales: {
+                xAxes: [
+                  {
+                    type: "time",
+                  },
+                ],
+              },
+              responsive: true,
+              maintainAspectRatio: false,
+            },
+          };
+
+          const myChart = new Chart(ctx, config);
+        }
+      });
+
+      $("#stock_code").on("input", () => {
+        const stock_code = $("#stock_code").val();
+
+        $.get(
+          "http://localhost:3000/agent",
+          {
+            stock_code: stock_code,
+          },
+          function (optionList) {
+            var list = document.getElementById("agents");
+            list.innerHTML = "";
+
+            optionList.forEach(function (item) {
+              var option = document.createElement("option");
+              option.value = item;
+              list.appendChild(option);
+            });
+          }
+        );
+      });
+    </script>
+  </body>
+</html>
